@@ -59,6 +59,30 @@ public class DCEL
         halfEdges = new List<HalfEdge>();
         vertices = new List<Vertex>();
         faces = new List<Face>();
+
+        HalfEdge h1 = new HalfEdge();
+        HalfEdge h2 = new HalfEdge();
+        Vertex v1 = new Vertex(new Vector2(10, 10), h1);
+        Vertex v2 = new Vertex(new Vector2(-10, -10), h2);
+        Face f = new Face(h1);
+
+        h1.face = f;
+        h1.next = h2;
+        h1.prev = h2;
+        h1.target = v1;
+        h1.twin = h2;
+
+        h2.face = f;
+        h2.next = h1;
+        h2.prev = h1;
+        h2.target = v2;
+        h2.twin = h1;
+
+        halfEdges.Add(h1);
+        //halfEdges.Add(h2);
+        vertices.Add(v1);
+        vertices.Add(v2);
+        faces.Add(f);
     }
 
     public void AddVertex(Vertex vertex, HalfEdge halfEdge)
@@ -208,7 +232,7 @@ public class DCEL
         return Tuple.Create(found, minDist);
     }
 
-    private List<HalfEdge> halfEdges;
-    private List<Vertex> vertices;
-    private List<Face> faces;
+    public List<HalfEdge> halfEdges { get; set; }
+    public List<Vertex> vertices { get; set; }
+    public List<Face> faces { get; set; }
 }
