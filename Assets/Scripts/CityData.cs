@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using ValuationLambda = System.Func<float, float, float, float>;
+
 public enum Hierarchy
 {
     MINOR, MAJOR
@@ -49,29 +51,39 @@ public class LandUseType
         COMMERCIAL, PARK, PUBLIC
     }
 
+    public LandUseType(Type type, float percentage, ValuationFunction[] functions)
+    {
+        this.type = type;
+        this.percentage = percentage;
+        this.functions = functions;
+    }
+
     public class ValuationFunction
     {
-        public enum Function
+        public ValuationFunction(ValuationLambda function, Attribute attribute, float weight, float pMin, float pMax)
         {
-            STEP, LINEAR_UP_RAMP, LINEAR_DOWN_RAMP,
-            GAIN_UP_RAMP, GAIN_DOWN_RAMP
+            this.function = function;
+            this.attribute = attribute;
+            this.weight = weight;
+            this.pMin = pMin;
+            this.pMax = pMax;
         }
 
         public enum Attribute
         {
-            CLUSTER, NEIGHBORHOOD,
+            CLUSTER, INFLUENCE,
             FOREST_DIST, WATER_DIST, CENTER_DIST,
-            TRAFFIC, SLOPE, ELEVATION
+            TRAFFIC, SLOPE, ELEVATION, NOOP
         }
 
-        static Func<float, float, float> stepFunction = (value, pMin) =>
+        public static ValuationLambda stepFunc = (value, pMin, pMax) =>
         {
-            if (value > pMin)
+            if (value > pMin && value < pMax)
                 return 1;
             return 0;
         };
 
-        static Func<float, float, float, float> linearUpFunction = (value, pMin, pMax) =>
+        public static ValuationLambda linearUpFunc = (value, pMin, pMax) =>
         {
             if (value < pMin)
                 return 0;
@@ -84,31 +96,51 @@ public class LandUseType
             return value * a + b;
         };
 
-        static Func<float, float, float, float> linearDownFunction = (value, pMin, pMax) =>
+        public static ValuationLambda linearDownFunc = (value, pMin, pMax) =>
         {
-            return 1 - linearUpFunction(value, pMin, pMax);
+            return 1 - linearUpFunc(value, pMin, pMax);
         };
 
+        public float Execute(float attribute)
+        {
+            return weight * function(attribute, pMin, pMax);
+        }
+
+        public Func<float, float, float, float> function { get; set; }
+        public Attribute attribute { get; set; }
         public float weight { get; set; }
         public float pMin { get; set; }
         public float pMax { get; set; }
     }
 
+    public float GetLandUseValue(float attribute)
+    {
+        float landUseValue = 0;
+        foreach (var function in functions)
+        {
+            landUseValue += function.Execute(attribute);
+        }
+        return landUseValue;
+    }
+
     public Type type { get; set; }
     public float percentage { get; set; }
-    public List<ValuationFunction> functions { get; set; }
+    public ValuationFunction[] functions { get; set; }
 }
 
 public class LotInfo
 {
-    public LandUseType landUseType { get; set; }
+    public LandUseType.Type landUseType { get; set; }
     public float landUseValue { get; set; }
-}
+    public Vector2 position { get; set; }
 
-public class SimulationInput
-{
-    public List<Vector2> cityCenters { get; set; }
-    public List<Vector2> growthCenters { get; set; }
-    public List<float> streetGrowth { get; set; }
-    public List<float> avgPrice { get; set; }
+    // Local land use goals
+    public float cluster { get; set; }
+    public List<float> influence { get; set; }
+    public float traffic { get; set; }
+    public float cityCenterDistance { get; set; }
+    public float forestDistance { get; set; }
+    public float waterDistance { get; set; }
+    public float slope { get; set; }
+    public float elevation { get; set; }
 }

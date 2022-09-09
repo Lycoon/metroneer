@@ -26,6 +26,7 @@ public class DCEL
         public HalfEdge twin { get; set; }
         public HalfEdge next { get; set; }
         public HalfEdge prev { get; set; }
+        public StreetInfo streetInfo { get; set; }
     }
 
     public class Vertex
@@ -40,6 +41,7 @@ public class DCEL
 
         public Vector2 position { get; set; }
         public HalfEdge halfEdge { get; set; }
+        public VertexInfo vertexInfo { get; set; }
     }
 
     public class Face
@@ -52,6 +54,7 @@ public class DCEL
         public Face() { }
 
         public HalfEdge halfEdge { get; set; }
+        public LotInfo lotInfo { get; set; }
     }
 
     public DCEL()
@@ -79,7 +82,7 @@ public class DCEL
         h2.twin = h1;
 
         halfEdges.Add(h1);
-        //halfEdges.Add(h2);
+        halfEdges.Add(h2);
         vertices.Add(v1);
         vertices.Add(v2);
         faces.Add(f);
